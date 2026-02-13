@@ -283,7 +283,7 @@ $(function()
     downloadInnerHtml(fileName, 'OverviewSVG','text/html');
 });
 
-  var fasta = `{{alignment|safe}}`;
+  var fasta = {{ alignment_json|safe }};
   var aligned_seqs =  msa.io.fasta.parse(fasta);
 
 

@@ -2,12 +2,14 @@
 
 from django.urls import include, re_path
 from django.contrib import admin
+from django.views.generic import RedirectView
 
 from database import views
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
-    re_path(r'^$', views.index, name='index'),
+    re_path(r'^$', RedirectView.as_view(url='/genes/', permanent=False)),  # root -> gene list (proxy may not forward /)
+    re_path(r'^home/$', views.index, name='index'),
     re_path(r'^genes/$', views.genes, name='genes'),
     re_path(r'^genes/(?P<gene_name>[^/]+)/$', views.gene_detail, name='gene_info'),
     re_path(r'^genes/add_clades/$', views.gene_add_clade, name='add_clade_to_gene'),

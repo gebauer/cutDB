@@ -206,15 +206,9 @@ class clade(models.Model):
             matrix_handle, matrix_name = mkstemp()
             handle = os.fdopen(matrix_handle, 'r+')
 
-            proc = Popen([clustalo_bin, '--infile=-', '--full', '--percent-id', '--distmat-out='+matrix_name, '--force'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-          #  proc = Popen([clustalo.exe', '--infile=-', '--full', '--percent-id','--distmat-out='+matrix_name, '--force'], stdout=PIPE, stdin=PIPE, stderr=PIPE, executable='"c:\Program Files (x86)\clustal-omega-1.2.2-win64\"' )
-            stdout, stderr = proc.communicate(input = str.encode(myfile.getvalue()))
-            
-            #handle.close()
-            #handle = open (matrix_handle,'r')
-            #print (matrix)
-            #+myfile.getvalue())
-            #file = open(matrix_name, 'r')
+            proc = Popen([clustalo_bin, '--infile=-', '--full', '--percent-id', '--distmat-out='+matrix_name, '--force', '--outfmt=fa'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            stdout, stderr = proc.communicate(input=str.encode(myfile.getvalue()))
+            handle.seek(0)
             identity_matrix = handle.read()
             os.close (matrix_handle)
             os.remove(matrix_name)
@@ -224,14 +218,7 @@ class clade(models.Model):
             for line in identity_matrix.splitlines()[1:]:
                 identities[line.split()[0]] =  list(map(float, line.split()[1:]))
                 ident_array.append ([line.split()[0],list(map(float, line.split()[1:]))])
-#                ident_array.append (list(map(float, line.split()[1:])))
-            print (ident_array)
-
-
-            #print ("alignment")
-            #print (stdout)
-            #print (stderr)
-            return ({'alignment' : stdout, 'identities' : ident_array })
+            return ({'alignment': stdout, 'identities': ident_array})
         else:
             return ({'alignment' : str.encode(myfile.getvalue()), 'identities' :'', 'ident_array':'' })
         

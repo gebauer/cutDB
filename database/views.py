@@ -288,12 +288,15 @@ def clade_detail(request, clade_identifier):
         Length_CT: '',
     }]
     '''
-    #print (align)
+    # Decode alignment bytes for template; use UTF-8 (unicode_escape corrupts alignment text)
+    align_bytes = align['alignment']
+    alignment_str = align_bytes.decode('utf-8', errors='replace') if isinstance(align_bytes, bytes) else align_bytes
     context = {
         'clade': c,
         'recursive' : recursive,
         'clades' : clades,
-        'alignment' : align['alignment'].decode('unicode_escape')  ,
+        'alignment' : alignment_str,
+        'alignment_json' : json.dumps(alignment_str),  # safe for embedding in JS (no backtick/${ issues)
         'identity_items' : align['identities'],
         'gene_count' : c.gene_count(recursive),
         'table_data' : json.dumps(table_data),
