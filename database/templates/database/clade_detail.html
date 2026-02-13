@@ -13,7 +13,7 @@
 <!-- Latest compiled and minified Locales -->
 
 <script src="{% static 'database/js/feature-viewer.bundle.js' %}"></script>
-<script src="{% static 'database/js/msa.min.gz.js' %}"></script>
+<!-- MSA will be loaded dynamically after jQuery is ready -->
 
 <script src="{% static 'database/tableExport/libs/FileSaver/FileSaver.min.js' %}"></script>
 <script src="{% static 'database/tableExport/libs/js-xlsx/xlsx.core.min.js' %}"></script>
@@ -184,7 +184,7 @@
   {% if gene_count > 0 %}
   <h2 class="content-subhead">Alignment <i class="far fa-question-circle fa-xs" style="color:#646464" title="ClustalO alignment of proteins in the class/cluster."></i></h2>
   <div>
-    <div id='msa-viewer-div'>
+    <div id='msa-viewer-div' data-msa-script="{% static 'database/js/msa.min.gz.js' %}">
     </div>
   </div>
 
@@ -283,32 +283,60 @@ $(function()
     downloadInnerHtml(fileName, 'OverviewSVG','text/html');
 });
 
+  // Load MSA library dynamically after jQuery is ready, then initialize viewer
   var fasta = {{ alignment_json|safe }};
-  var aligned_seqs =  msa.io.fasta.parse(fasta);
-
-
-  var msa_viewer = msa({
-    bootstrapMenu: true,
-    el: $('#msa-viewer-div'),
-    seqs: aligned_seqs,
-    vis: {
-      overviewbox : true,
+  var msaViewerDiv = $('#msa-viewer-div');
+  if (fasta && fasta.length > 0 && msaViewerDiv.length) {
+    // Load MSA script if not already loaded
+    if (typeof msa === 'undefined') {
+      var msaScript = document.createElement('script');
+      msaScript.src = msaViewerDiv.data('msa-script');
+      msaScript.onload = function() {
+        initializeMSAViewer(fasta);
+      };
+      msaScript.onerror = function() {
+        console.error('Failed to load MSA library from:', msaScript.src);
+      };
+      document.head.appendChild(msaScript);
+    } else {
+      initializeMSAViewer(fasta);
     }
-  });
+  }
 
-  msa_viewer.g.colorscheme.addStaticScheme("collagen",{G: "blue", P: "orange"});
-  msa_viewer.g.colorscheme.set("scheme", "collagen");
+  function initializeMSAViewer(fasta) {
+    try {
+      if (typeof msa === 'undefined' || typeof jQuery === 'undefined') {
+        console.error('MSA or jQuery not available');
+        return;
+      }
+      
+      var aligned_seqs = msa.io.fasta.parse(fasta);
+      
+      if (aligned_seqs && aligned_seqs.length > 0) {
+        var msa_viewer = msa({
+          bootstrapMenu: true,
+          el: $('#msa-viewer-div'),
+          seqs: aligned_seqs,
+          vis: {
+            overviewbox : true,
+          }
+        });
 
-  // Do I realy want features?
-  //var gff_txt = "##gff-version 3\nCOL109 MyData  Col-1-domain  8 28  1 + 0 .\nrol-1 MyData  Col-1-domain  8 28  1 + 0 .\n"
-  //var gff = msa.io.gff
-  //
- // var features = gff.parseSeqs(gff_txt);
-// msa_viewer.seqs.addFeatures(features);
-  
-  msa_viewer.g.user.set("searchText", "{{clade.regExpr|safe}}");
+        msa_viewer.g.colorscheme.addStaticScheme("collagen",{G: "blue", P: "orange"});
+        msa_viewer.g.colorscheme.set("scheme", "collagen");
+        
+        {% if clade.regExpr %}
+        msa_viewer.g.user.set("searchText", "{{clade.regExpr|safe}}");
+        {% endif %}
 
-  msa_viewer.render();
+        msa_viewer.render();
+      } else {
+        console.warn('MSA: No sequences parsed from alignment data');
+      }
+    } catch (e) {
+      console.error('MSA viewer initialization failed:', e);
+    }
+  }
 
   $('#mytable').bootstrapTable({
     columns: [
