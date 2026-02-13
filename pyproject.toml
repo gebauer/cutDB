@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "cutdb"
+version = "0.1.0"
+description = "Database application for analysing cuticular collagens from C. elegans"
+readme = "README.md"
+authors = []
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Django = "^4.2"
+django-tinymce = "^4.0"
+django-mathfilters = "^1.0"
+django-colorful = "^1.4"
+biopython = "^1.83"
+numpy = "^1.26"
+cython = "^3.0"
+requests = "^2.31"
+gunicorn = "^21.0"
+whitenoise = "^6.0"
+
+[tool.poetry.group.dev.dependencies]
+# Optional: add when needed
+# pytest-django = "^4.5"
+# black = "^24.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

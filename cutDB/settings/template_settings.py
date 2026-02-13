@@ -17,27 +17,22 @@ from .base import *
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '****set a default key here****')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False # You might want to switch this one?
-DEBUG = bool( os.environ.get('DJANGO_DEBUG', False) )
+DEBUG = os.environ.get('DJANGO_DEBUG', '0').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ["*** set you hosts here ***"]
-# Use "triple quotes" to escape whitespaces in windows paths e.g: '"c:\Program Files\clustalO\clustalo.exe"'
-CLUSTALO_BIN ="*** set to full path + executable of ClustalO binary ***"
+# Comma-separated in env (Coolify needs localhost for health checks + your domain)
+_allowed = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
 
-# Database
-# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+# Use "triple quotes" to escape whitespaces in Windows paths e.g: '"c:\Program Files\clustalO\clustalo.exe"'
+CLUSTALO_BIN = os.environ.get('CLUSTALO_BIN', '*** set to full path + executable of ClustalO binary ***')
 
+# Database (SQLite by default; file path in project root)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'cutdb',
-        'USER': '***db_user***',
-        'PASSWORD': '***db_password***',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.environ.get('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
     }
 }
 
-STATIC_URL = '/static/'  
-STATIC_ROOT = "***your static root***"
+STATIC_URL = '/static/'
+STATIC_ROOT = os.environ.get('STATIC_ROOT', str(BASE_DIR / 'staticfiles'))

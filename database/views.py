@@ -14,6 +14,9 @@ from django.db.models import Q
 from Bio import SeqIO
 
 from django.db import connection
+from django.conf import settings
+import os
+from datetime import datetime
 
 import re
 import json
@@ -25,14 +28,22 @@ def index(request):
     gene.objects.filter()
     noncuticular = gene.objects.filter(clade__identifier='non-cuticular').count()
     #print(get_object_or_404(project_settings, s_key="db_version").s_value)
-    cursor = connection.cursor()
-    sql = '''SELECT UPDATE_TIME
-            FROM information_schema.tables
-            WHERE TABLE_SCHEMA = 'cutdb' AND TABLE_NAME LIKE 'database%'
-            ORDER BY UPDATE_TIME DESC'''
-    cursor.execute(sql)
-    row = cursor.fetchone()
-    date = row[0]
+    # "Last updated" date: MySQL has information_schema; SQLite uses db file mtime
+    if connection.vendor == 'sqlite':
+        db_path = settings.DATABASES['default']['NAME']
+        if os.path.isfile(db_path):
+            date = datetime.fromtimestamp(os.path.getmtime(db_path))
+        else:
+            date = None
+    else:
+        cursor = connection.cursor()
+        sql = '''SELECT UPDATE_TIME
+                FROM information_schema.tables
+                WHERE TABLE_SCHEMA = %s AND TABLE_NAME LIKE 'database%%'
+                ORDER BY UPDATE_TIME DESC'''
+        cursor.execute(sql, [settings.DATABASES['default']['NAME']])
+        row = cursor.fetchone()
+        date = row[0] if row else None
 
     context = {
         'statistics': {

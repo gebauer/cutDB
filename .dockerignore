@@ -1,0 +1,39 @@
+# Git and env
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache
+.coverage
+htmlcov
+*.egg-info
+.eggs
+
+# Local and generated
+db.sqlite3
+staticfiles/
+local_env/
+cutDB/settings/local_settings.py
+cutDB/settings/production_settings.py
+*.pyc
+
+# Dumps (use a volume for DB in production)
+database_dump/dump.sql
+database_dump/dump_sqlite.sql
+
+# Docs (not needed in image)
+PLAN.md
+DEPLOYMENT.md
+
+# IDE and OS
+.vscode
+.spyproject
+.DS_Store
+Thumbs.db

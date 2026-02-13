@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Application definition
@@ -33,6 +36,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -91,7 +95,7 @@ TIME_ZONE = 'Europe/Berlin'
 
 USE_I18N = True
 
-USE_L10N = True
+# USE_L10N removed in Django 4.0 (default True)
 
 USE_TZ = True
 
@@ -104,30 +108,28 @@ USE_TZ = True
 ## This settings should be overwritten by your local setting file...
 
 
-# Database
-# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+# Database (SQLite by default; no separate DB server needed)
+# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'cutDB',
-        'USER': 'USERNAME',
-        'PASSWORD': 'PWD',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
 
 
-DEBUG = False
+
 DEBUG = bool( os.environ.get('DJANGO_DEBUG', False) )
+
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
 
 STATIC_URL = '/static/'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 

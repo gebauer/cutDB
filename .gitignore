@@ -21,6 +21,11 @@ cutDB/settings_local\.py
 
 \.vscode/
 
+.env
+db.sqlite3
+staticfiles/
+database_dump/dump.sql
+database_dump/dump_sqlite.sql
 local_env/
 CO01A1_HUMAN\.gbk
 

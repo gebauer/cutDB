@@ -11,7 +11,6 @@ from django.db.models import Value
 from Bio import Seq, SeqRecord, SeqIO
 
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-# from Bio.Alphabet import IUPAC # deprecated in BioPyhton
 
 from subprocess import Popen, STDOUT, PIPE
 
@@ -27,7 +26,7 @@ from pprint import pprint
 class ExtraManager(models.Manager):
 
     def in_a_number_order(self, *args, **kwargs):
-        qs = self.get_query_set().filter(*args, **kwargs)
+        qs = self.get_queryset().filter(*args, **kwargs)
         return sorted(qs, key=lambda n: (n[0], int(n[1:])))
 
     """QuerySet manager for Invoice class to add non-database fields.
@@ -199,13 +198,15 @@ class clade(models.Model):
 
        
         if self.gene_count (recursive) > 1:
+            clustalo_bin = getattr(settings, 'CLUSTALO_BIN', None)
+            if not clustalo_bin or not os.path.isfile(clustalo_bin):
+                # Clustal Omega not installed or path invalid: return sequences without alignment
+                return {'alignment': str.encode(myfile.getvalue()), 'identities': '', 'ident_array': ''}
 
-            matrix_handle,matrix_name = mkstemp()
-            handle = os.fdopen (matrix_handle,'r+')
+            matrix_handle, matrix_name = mkstemp()
+            handle = os.fdopen(matrix_handle, 'r+')
 
-            # print ("matrix name",matrix_name)
-
-            proc = Popen([settings.CLUSTALO_BIN, '--infile=-', '--full', '--percent-id','--distmat-out='+matrix_name, '--force'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            proc = Popen([clustalo_bin, '--infile=-', '--full', '--percent-id', '--distmat-out='+matrix_name, '--force'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
           #  proc = Popen([clustalo.exe', '--infile=-', '--full', '--percent-id','--distmat-out='+matrix_name, '--force'], stdout=PIPE, stdin=PIPE, stderr=PIPE, executable='"c:\Program Files (x86)\clustal-omega-1.2.2-win64\"' )
             stdout, stderr = proc.communicate(input = str.encode(myfile.getvalue()))
             
@@ -247,7 +248,7 @@ class gene(models.Model):
     sequence = models.CharField('Amino acid sequence',max_length=5000)
     name = models.CharField('My official gene name',max_length=40, unique=True)
     alias = models.CharField('Aliases',max_length=100, blank=True)
-    clade = models.ManyToManyField(clade, null=True, blank=True) 
+    clade = models.ManyToManyField(clade, blank=True) 
     
     description = tinymce_models.HTMLField( blank=True)
     
@@ -259,7 +260,7 @@ class gene(models.Model):
         return ("{} ({} / {})".format(self.name,self.gene_id, self.prot_id))
 
     def getSeqRecord (self):
-        my_SeqRec = SeqRecord.SeqRecord (Seq.Seq(self.sequence, IUPAC.protein))
+        my_SeqRec = SeqRecord.SeqRecord(Seq.Seq(self.sequence))
         my_SeqRec.id = self.name
         
         #my_SeqRec.id = self.gene_id
@@ -271,15 +272,11 @@ class gene(models.Model):
             compound = []
             if len(feature.region_to_array())> 1:
                 for element in feature.region_to_array():
-                    
-
-                    compound.append (FeatureLocation (int(element[0])-1,int(element[1])))
+                    compound.append(FeatureLocation(int(element[0])-1, int(element[1]), strand=1))
                 location = CompoundLocation(compound)
             else:
-                location = FeatureLocation (int(feature.region_to_array()[0][0])-1,int(feature.region_to_array()[0][1]))
-            #print (self.name)
-            #print ("location", location)
-            my_feature = SeqFeature (location, type=feature.type.name,strand=+1,qualifiers={'description':feature.name})
+                location = FeatureLocation(int(feature.region_to_array()[0][0])-1, int(feature.region_to_array()[0][1]), strand=1)
+            my_feature = SeqFeature(location, type=feature.type.name, qualifiers={'description': feature.name})
             my_SeqRec.features.append(my_feature)
         
 
