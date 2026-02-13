@@ -7,11 +7,19 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# Install system deps: Clustal Omega for sequence alignment
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends clustalo \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install Poetry and project dependencies
 RUN pip install --no-cache-dir poetry
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false \
     && poetry install --no-dev --no-interaction --no-root
+
+# Clustal Omega binary (override with env in Coolify if needed)
+ENV CLUSTALO_BIN=/usr/bin/clustalo
 
 # Application code
 COPY manage.py ./

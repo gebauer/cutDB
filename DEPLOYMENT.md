@@ -18,7 +18,7 @@ Set these in your Coolify application **Environment Variables**:
 | `ALLOWED_HOSTS` | Yes | `CeColDB.xcience.net,localhost,127.0.0.1` | Comma-separated. Include `localhost` for Coolify health checks. |
 | `DB_NAME` | Recommended | `/data/db.sqlite3` | Path to SQLite file. Use `/data/db.sqlite3` and mount a volume at `/data` (see below). |
 | `STATIC_ROOT` | Optional | `/app/staticfiles` | Default is fine; static files are collected at build time. |
-| `CLUSTALO_BIN` | Optional | (empty or path) | Leave unset to disable alignment; or install Clustal Omega in the image and set path. |
+| `CLUSTALO_BIN` | Optional | `/usr/bin/clustalo` | Clustal Omega is installed in the image; override only if you use a different path. |
 
 ## SQLite database
 
@@ -53,18 +53,9 @@ You can **copy your existing `db.sqlite3`** into the server:
 2. Copy your local `db.sqlite3` to the server (e.g. `scp db.sqlite3 user@server:/path/to/coolify/data/...` or use Coolify’s file/shell to place it at `/data/db.sqlite3` in the container).  
 3. Restart the application so it uses the new DB.
 
-## Optional: Clustal Omega in Docker
+## Clustal Omega
 
-If you want alignments in production, install Clustal Omega in the image and set `CLUSTALO_BIN`:
-
-```dockerfile
-# In Dockerfile after poetry install, add:
-RUN apt-get update && apt-get install -y --no-install-recommends clustalomega \
-    && rm -rf /var/lib/apt/lists/*
-ENV CLUSTALO_BIN=/usr/bin/clustalo
-```
-
-(Adjust package name for your base image; Debian uses `clustalomega`.)
+Clustal Omega is **installed in the image** (`apt install clustalo`), so alignment features work in production without extra configuration. The default path is `/usr/bin/clustalo`; set `CLUSTALO_BIN` only if you use a different location.
 
 ## Checklist
 
