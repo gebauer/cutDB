@@ -1,0 +1,493 @@
+{% extends "database/base.html" %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% load genefilters %}
+
+{% block extraheader %}
+
+<link rel="stylesheet" href="{% static 'database/bootstrap/bootstrap.min.css' %}" >
+<link rel="stylesheet" href="{% static 'database/bootstrap/bootstrap-table.min.css' %}">
+<link rel="stylesheet" href="{% static 'database/bootstrap/bootstrap-table-group-by.css' %}">
+
+<!-- Latest compiled and minified Locales -->
+
+<script src="{% static 'database/js/feature-viewer.bundle.js' %}"></script>
+<script src="{% static 'database/js/msa.min.gz.js' %}"></script>
+
+<script src="{% static 'database/tableExport/libs/FileSaver/FileSaver.min.js' %}"></script>
+<script src="{% static 'database/tableExport/libs/js-xlsx/xlsx.core.min.js' %}"></script>
+<script src="{% static 'database/tableExport/tableExport.min.js' %}"></script>
+
+<script src="{% static 'database/bootstrap/bootstrap.min.js' %}"></script>
+
+<script src="{% static 'database/bootstrap/bootstrap-table.min.js' %}" ></script>
+<script src="{% static 'database/bootstrap/bootstrap-table-export.js' %}" ></script>
+<script src="{% static 'database/bootstrap//bootstrap-table-group-by.js' %}" ></script>
+<script src="{% static 'database/js/FileSaver.min.js' %}"></script>
+
+
+<style>
+  body {font-family: sans-serif;line-height: 1.}
+</style>
+
+{% endblock %}
+
+
+
+
+
+{% block content %}
+
+<div class="header">
+    {% if user.is_authenticated %}
+      <div style="float:right"><a href="{% url 'admin:database_clade_change' clade.id %}"><i class="fa fa-pencil-square-o fa-2x"></i></a></div>
+    {%endif%}
+    <h1>{{clade.identifier}}</h1>        
+    <h2></h2>
+</div>
+<div class="content">
+
+    <div class="pure-u-1-6" style="float:right;font-weight:bold">
+        <div class="pure-menu pure-menu-horizontal">
+            <ul class="pure-menu-list">
+                <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover"><a href="#" class="pure-menu-link">Export <i class="far fa-question-circle fa-xs" style="color:#646464" title="Export all sequences of this cluster/class with all feautures (or none) as GenBank (or FASTA)."></i></a>
+                    <ul class="pure-menu-children">
+                        <li class="pure-menu-item"><a href="#" onClick="exportClade('genbank');" class="pure-menu-link">... as Genbank</a></li>
+                        <li class="pure-menu-item"><a href="#"  onClick="exportClade('fasta');" class="pure-menu-link">... as FASTA</a></li>
+                    </ul>
+                </li>
+              </ul>
+        </div>
+        
+        {% if recursive == True %}
+         <a href="{{ request.path }}"><img src="{% static "database/images/recursive_on.png" %}" width="80px"></a>
+        {% else %}
+          <a href="{{ request.path }}?recursive=True"><img src="{% static "database/images/recursive_off.png" %}" width="80px"></a>
+        {% endif %}&nbsp;<i class="far fa-question-circle fa-xs" style="color:#646464" title="If recursive is switched on, all proteins belonging to classes in lower levels will be shown (Carefull: Might be slow, with high-order classes)"></i> 
+
+    </div>
+
+  <h2 class="content-subhead">Description <i class="far fa-question-circle fa-xs" style="color:#646464" title="Description of the cluster/class (if present)."></i></h2>
+  <div id="description">{{clade.description|safe}}
+
+        
+  </div>
+
+  <h2 class="content-subhead">Regular Expression <i class="far fa-question-circle fa-xs" style="color:#646464" title="For the cuticular collagens, the collagenous domains can often be described by a regular expressions."></i></h2>
+  <div>{{clade.regExpr|safe}}</div>
+
+  <h2 class="content-subhead">Genes/Proteins  <i class="far fa-question-circle fa-xs" style="color:#646464" title="Genes (resp. Proteins) belonging to this class/cluster."></i></h2>
+  <div style="column-count: 3">
+  {% for clade in clades %}
+    {% for gene in clade.gene_set.all %}
+      <li><a href="{% url 'genes' %}{{ gene.name }}/">{{ gene.name }}</a> ({{clade.identifier}})</li>
+     {% endfor %}
+  {% endfor %}
+  </div>
+
+  <h2 class="content-subhead">Cluster structure <i class="far fa-question-circle fa-xs" style="color:#646464" title="Suroundings organisation of this cluster."></i></h2>
+  <div id="clade" class="pure-g">
+    <div class="pure-u-1-3">
+      <h3 class="content-subhead">Higher Level <i class="far fa-question-circle fa-xs" style="color:#646464" title="Higher order ('parent') clusters/classes."></i></h3>
+      <ul>
+        {% if clade.parent.identifier %}
+        <li><a href="{% url 'clades' %}{{ clade.parent.identifier }}/">{{ clade.parent.identifier}}</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    <div class="pure-u-1-3">
+      <h3 class="content-subhead">Same level <i class="far fa-question-circle fa-xs" style="color:#646464" title="Clusters/classes on the same organisational level."></i></h3>
+      <ul class="clade_list_compact">
+        {% for clade in clade.parent.clade_set.all %}
+          <li><a href="{% url 'clades' %}{{ clade.identifier }}/">{{ clade.identifier}}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="pure-u-1-3">
+      <h3 class="content-subhead">Lower level <i class="far fa-question-circle fa-xs" style="color:#646464" title="Clusters at a lower level ('direct children')."></i></h3>
+      <ul compact="compact">
+        {% for clade in clade.clade_set.all %}
+          <li><a href="{% url 'clades' %}{{ clade.identifier }}/">{{ clade.identifier}}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="content-subhead">Domain organisation <i class="far fa-question-circle fa-xs" style="color:#646464" title="Representative domain organisation (representative protein lettered in bold)."></i></h2>
+  <div>        
+    <a href="#" id="downloadLink"><i class="fa fa-download" aria-hidden="true"></i></a>
+      <span id='OverviewSVG' >
+      
+    {% for clade in clades_noParents %}
+      {% with scale="0.5" height="5" left_border="20" bottom_border='2' missed='0'%}
+
+        {% if forloop.first %}
+          <svg width="210mm" height="{{height|addition:bottom_border|addition:1|mul:forloop.revcounter}}mm" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" >     
+        {% endif %}
+
+        {% if clade.has_children != True or recursive == False %}
+          {% with  gene=clade.get_model_gene%}
+  
+            <svg y="{{height|addition:1|addition:bottom_border|mul:forloop.counter0}}mm" width="210mm" height="{{height|addition:bottom_border}}mm" viewbox="0 0 210 {{height|addition:3}}">
+            <g>
+            {% for feature in gene.feature_set.all %}
+              {% if feature.type.name|in_list:'col1_domain' %}
+                {% with col_end=feature.end|addition:1|mul:scale%}
+                {{col_end}}
+
+                <g  transform="translate({{170|sub:col_end}},0)">
+                {% endwith %}
+              {%endif %}
+            {% endfor %}
+
+            <line x1="{{0|mul:scale|addition:left_border}}" y1="{{height|div:2}}" x2="{{gene.sequence|length|mul:scale|addition:left_border}}" y2="{{height|div:2}}" stroke="black" stroke-width="0.35"/>
+            {% for feature in gene.feature_set.all %}
+              {% for start, end in feature.region_to_array %}
+                {% if feature.type.name|in_list:'predictedFurin,ph_SigPep,ph_Transmem,C-Cys-ProPep,SignalP,N-Cys-ProPep,col1_domain,N-Propeptide,N-Cys-Collagen,C-Cys-Collagen,N-Cys-ProPep' %}
+                  <rect x="{{start|sub:1|mul:scale|addition:left_border}}" y="{{height|div:2|sub:2}}" 
+                  {% if feature.type.name|in_list:'C-Cys-ProPep,N-Cys-ProPep,N-Cys-Collagen,C-Cys-Collagen' %}
+                    rx="1.0" ry="1.0"
+                  {%endif%}
+                  width="{{end|sub:start|addition:1|mul:scale}}" height="4" fill="{{feature.type.color}}" />
+                  {% if feature.type.name|in_list:'col1_domain,N-Propeptide' %}
+                    <text font-size="4.03" font-family="Arial, Sans-Serif" fill="white" x="{{end|sub:start|sub:1|div:2|addition:start|mul:scale|addition:left_border}}" y="{{height|div:2|addition:1.2}}"  text-anchor="middle">{{end|sub:start|addition:1|intdiv:3}}</text>  
+                    
+                  {%endif%}
+                {% endif %}
+              {%endfor%}
+            {% endfor %}
+            </g >
+            <text font-size="4.03" font-family="Arial, Sans-Serif" fill="black" x="0" y="{{height|div:2|addition:1.2}}" text-anchor="left">{{clade.identifier}}</text>
+            <text font-size="3.25" font-family="Arial, Sans-Serif" fill="black" x="{{left_border|div:2}}" y="{{height|div:2|addition:4.5}}" text-anchor="left">
+              {% for name in clade.get_gene_names %}
+                {% if name == gene.name %}
+                  <tspan font-weight='bold'>
+                {% endif %}
+                {{name}}{% if name == gene.name %}</tspan>{% endif %}{% if forloop.last != True %},{% endif %}
+              {% endfor %} </text>  
+            </g></svg>
+          {% endwith %}
+        {% else %}
+          
+        {% endif %}
+      {% endwith %}
+    {% endfor %}
+</svg>
+  
+      </span>
+</div>
+
+
+
+
+  {% if gene_count > 0 %}
+  <h2 class="content-subhead">Alignment <i class="far fa-question-circle fa-xs" style="color:#646464" title="ClustalO alignment of proteins in the class/cluster."></i></h2>
+  <div>
+    <div id='msa-viewer-div'>
+    </div>
+  </div>
+
+  {% endif %}
+  
+  {% if gene_count > 1 %}
+  <h2 class="content-subhead">Identity matrix <i class="far fa-question-circle fa-xs" style="color:#646464" title="Pairwise identity matrix (from ClustalO)."></i></h2>
+  <table class='identity-table'>
+    <tr><td>Result</td>
+  <!--   
+Inline TGF Format
+{% for value in identity_items  %}{{forloop.counter}} {{value.0}}
+{% endfor %}      
+{% for value in identity_items %}{% for item  in value.1 %}{{forloop.parentloop.counter}} {{forloop.counter}} {{item|div:100|floatformat:2|intcomma}}
+{% endfor %}
+{% endfor %}
+  
+
+
+  -->
+  {% for value in identity_items  %} 
+      <th><a href="{% url 'gene_info' value.0 %}">{{value.0}}</a></th>
+  {% endfor %}      
+    </tr>
+  {% for value in identity_items %} 
+  <tr>
+    <th><a href="{% url 'gene_info' value.0 %}">{{value.0}}</a></th>
+    {% for item  in value.1 %} 
+      <td class="style{{item|intdiv:10|mul:10|stringformat:'d'  }}">
+        {{item|floatformat:2|intcomma}}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+  {% endif %}
+
+  {% if gene_count > 0 %}
+<h2 class="content-subhead">Table<i class="far fa-question-circle fa-xs" style="color:#646464" title="Table with features most relevant for cuticular collagens. Can be exported to Excel!"></i></h2>
+<div class='pure-g'>
+  <div class='pure-u'>
+    <div id ="toolbar"></div>
+  <table id='mytable'
+    data-search="false" 
+    data-show-refresh="false" 
+    data-show-toggle="true" 
+    data-show-columns="true" 
+    data-show-export="true"
+    data-toolbar="#toolbar"  
+    data-minimum-count-columns="2"
+    data-show-pagination-switch="false" 
+    data-pagination="false" 
+    data-id-field="id" 
+    data-page-list="[10, 25, 50, 100, ALL]" 
+    data-show-footer="false" 
+    data-side-pagination="server" 
+    data-response-handler="responseHandler" 
+    data-group-by="false"
+    data-group-by-field="clade"
+    >
+   
+  </table>
+</div>
+</div>
+</div>
+{% endif %}
+
+
+
+
+
+
+
+
+{% endblock %}
+
+
+
+{% block individual_scripts %}
+
+
+<script>
+function exportClade($format) {
+  console.log ("Got it! Exporting  {{clade.identifier}} as $format");
+  
+  var link=document.createElement('a');
+  link.href = "{% url 'clade_info' clade.identifier  %}export/"+$format+"/{{recursive}}/";
+  link.download = link.href.substr(link.href.lastIndexOf('/') + 1);
+  link.click();
+  
+}
+
+$(function()
+{ 
+
+ $('#downloadLink').click(function(){
+    downloadInnerHtml(fileName, 'OverviewSVG','text/html');
+});
+
+  var fasta = `{{alignment|safe}}`;
+  var aligned_seqs =  msa.io.fasta.parse(fasta);
+
+
+  var msa_viewer = msa({
+    bootstrapMenu: true,
+    el: $('#msa-viewer-div'),
+    seqs: aligned_seqs,
+    vis: {
+      overviewbox : true,
+    }
+  });
+
+  msa_viewer.g.colorscheme.addStaticScheme("collagen",{G: "blue", P: "orange"});
+  msa_viewer.g.colorscheme.set("scheme", "collagen");
+
+  // Do I realy want features?
+  //var gff_txt = "##gff-version 3\nCOL109 MyData  Col-1-domain  8 28  1 + 0 .\nrol-1 MyData  Col-1-domain  8 28  1 + 0 .\n"
+  //var gff = msa.io.gff
+  //
+ // var features = gff.parseSeqs(gff_txt);
+// msa_viewer.seqs.addFeatures(features);
+  
+  msa_viewer.g.user.set("searchText", "{{clade.regExpr|safe}}");
+
+  msa_viewer.render();
+
+  $('#mytable').bootstrapTable({
+    columns: [
+      [{
+        field: 'id',
+        title: 'Gene ID',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      }, 
+      {
+        field: 'WBGene',
+        title: 'Wormbase',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      },{
+        field: 'transcript',
+        title: 'Isoforms',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      },{
+        field: 'clade',
+        title: 'Clade',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      },{
+        field: 'Protein_Length',
+        title: 'Aa',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      },{
+        field: 'PhiliusType',
+        title: 'Philius Topology',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      }, 
+      {
+        field: 'SignalP',
+        title: 'Signalpeptide /<br>resp. transmembrane<br>(pos)',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      }
+      , {
+        field: 'furinsite',
+        title: 'Furin sites<br>(pos)',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      },   
+      {
+        field: 'RGDsite',
+        title: 'RGD sites<br>(pos)',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      },
+      {
+        field: 'NPro',
+        title: 'N-ProPeptide',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        class: 'sequence_field',
+        sortable: 'true',
+      }, {
+        field: 'CProCys',
+        title: 'CysKnot C-ProPep',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        class: 'sequence_field',
+        sortable: 'true',
+      }, {
+        field: 'NColCys',
+        title: 'CysKnot N-Col domain',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        class: 'sequence_field',
+        sortable: 'true',
+      }, {
+        field: 'collagen',
+        colspan : '9',
+        title: 'Collagen Domain',
+        valign: 'middle',
+        halign: 'center',
+      }, {
+        field: 'CColCys',
+        title: 'CysKnot C-Col domain',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        class: 'sequence_field',
+        sortable: 'true',
+      },
+      {
+        field: 'Length_CT',
+        title: 'Length of C-terminus',
+        rowspan: '2',
+        valign: 'middle',
+        halign: 'center',
+        sortable: 'true',
+      },
+
+      ], 
+      [ {
+        field: 'start_col',
+        title: 'Start<br>(pos)',
+        sortable: 'true',
+      } ,{
+        field: 'Col1',
+        title: 'Col1<br>(length)',
+        sortable: 'true',
+      } ,{
+        field: 'NC1',
+        title: 'NC1<br>(length)',
+        sortable: 'true',
+      } ,{
+        field: 'Col2',
+        title: 'Col2<br>(length)',
+        sortable: 'true',
+      } ,{
+        field: 'NC2',
+        title: 'NC2<br>(length)',
+        sortable: 'true',
+      } ,{
+        field: 'Col3',
+        title: 'Col3<br>(length)',
+        sortable: 'true',
+      } ,{
+        field: 'NC3',
+        title: 'NC3<br>(length)',
+        sortable: 'true',
+      } ,{
+        field: 'Col4',
+        title: 'Col4<br>(length)',
+        sortable: 'true',
+      },{
+        field: 'total',
+        title: 'Total<br>(length)',
+        sortable: 'true',
+      }],
+    ],
+
+    data: {{table_data|safe}}
+  });
+
+
+});
+
+function downloadInnerHtml(filename, elId, mimeType) {
+  var elHtml = document.getElementById(elId).innerHTML;
+  var link = document.createElement('a');
+  mimeType = mimeType || 'image/svg+xml';
+
+  link.setAttribute('download', filename);
+  link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(elHtml));
+  link.click(); 
+}
+
+var fileName =  '{{clade.identifier}}.svg'; // You can use the .txt extension if you want
+
+
+</script>
+
+
+{% endblock %}

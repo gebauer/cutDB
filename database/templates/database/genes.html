@@ -1,0 +1,101 @@
+{% extends "database/base.html" %} {% load static %}
+
+
+{% block extraheader %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'database/css/jquery.dataTables.css' %}">
+<script type="text/javascript" charset="utf8" src="{% static 'database/js/jquery.dataTables.js'%}"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#myTable').DataTable({
+            paging: false
+        });
+
+    });
+</script>
+<style>
+
+</style>
+
+
+{% endblock %}
+
+
+{% block content %}
+<div class="header">
+    {% if user.is_authenticated %}
+    <div style="float:right"><a href="{% url 'admin:database_gene_changelist' %}"><i class="fa fa-pencil-square-o fa-2x"></i></a></div>
+    {%endif%}
+    <h1>List of "collagen-like" genes in <i>C. elegans</i> </h1>
+</div>
+
+<div class="content">
+
+    <!-- Help begin -->
+    <div class="pure-g" style="padding:0px">
+        <div class="pure-u" style='margin-left:auto; margin-right:0;' >
+            <a class="popHelp_open" href="#"><i class="far fa-question-circle fa-2x" style="color:#646464"></i></a>
+            <div data-role="popup" class="ui-content" id="popHelp">
+                <div style='float:right;text-align:right;position:relative;top:-0.7em'> <a href="#" data-rel="back" class="popHelp_close">[close]</a></div>
+                <h3><i class="far fa-question-circle fa-1x" style="color:#646464"></i> Help & Info</h3>
+                <ul>
+                    <li>Click on the gene name to view gene-centered information.</li>
+                    <li>Click on the clade, to view clade-centered information.</li>
+                    <li>You can sort the list by the up & down arrows.</li>
+                    <li>The table offers multiple search and filter options.</li>
+                </ul>
+                <!-- Add an optional button to close the popup -->
+            </div>
+        </div>
+    </div>
+    <!-- Help end -->
+
+
+
+
+
+    <div id="clade" class="pure-g" style="padding:10px">
+        <div class="pure-u" style='column-count:1'>
+            <h2>Collagen-like genes</h2><br>
+
+            {% if all_genes %}
+            <table id="myTable" class="display">
+                <thead>
+                    <tr>
+                        <td>Gene name</td>
+                        <td>Wormbase ID</td>
+                        <td>UniProt ID</td>
+                        <td>Unigene ID</td>
+                        <td>Alias</td>
+                        <td>Clade</td>
+
+                </thead>
+                <tbody>
+                    {% for gene in all_genes %}
+                    <tr>
+                        <td><a href="{% url 'genes' %}{{gene.name}}/">{{ gene.name }}</a></td>
+                        <td>{{ gene.wormbase_id }}</td>
+                        <td>{{ gene.prot_id }}</td>
+                        <td>{{ gene.gene_id }}</td>
+                        <td>{{ gene.alias }}</td>
+                        <td><a href="{% url 'clades' %}{{gene.clade.all.0.identifier}}/">{{ gene.clade.all.0.identifier}}</a></td>
+
+
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No genes in the database !?!</p>
+            {% endif %}
+        </div>
+    </div>
+    {% if user.is_authenticated %}
+    <div style="float:right"><a href="{% url 'admin:database_gene_changelist' %}"><i class="fa fa-pencil-square-o fa-2x"></i></a></div>
+    {%endif%}
+</div>
+
+
+{% endblock %}

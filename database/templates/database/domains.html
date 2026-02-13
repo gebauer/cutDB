@@ -1,0 +1,172 @@
+{% extends "database/base.html" %}
+{% load static %}
+{% load genefilters %}
+
+{% block extraheader %}
+<link href="{% static "database/css/ui.fancytree.min.css" %}" rel="stylesheet">
+<script src="{% static "database/js/jquery.fancytree-all.min.js" %}"></script>
+{% endblock %}
+
+{% block individual_scripts %}
+<script type="text/javascript">
+    $(function () {
+        // Attach the dynatree widget to an existing <div id="tree"> element
+        // and pass the tree options as an argument to the dynatree() function:
+        $("#tree").fancytree({
+            //          autoCollapse: true,
+            minExpandLevel: 1,
+            postinit: function (isReloading, isError) {
+                this.reactivate();
+            },
+            focus: function (event, data) {
+                // Auto-activate focused node after 2 seconds
+                data.node.expan();
+            },
+            activate: function (event, data) {
+                targetType = data.targetType;
+                console.log(targetType);
+                console.log('click');
+                var node = data.node;
+                // Use <a> href and target attributes to load the content:
+                if (node.data.href) {
+                    // Open target
+                    window.open(node.data.href, "_self");
+                    // or open target in iframe
+                    //                $("[name=contentFrame]").attr("src", node.data.href);
+                }
+            },
+        });
+    });
+    $("#tree").fancytree({
+        clickFolderMode: 3 // 1:activate, 2:expand, 3:activate and expand
+        
+    });
+</script>
+
+<style>
+    ul.fancytree-container{
+            border: 0px;
+
+        }
+
+
+</style>
+
+{% endblock %}
+
+
+}
+
+{% block content %}
+<div class="header">
+    {% if user.is_authenticated %}
+    <div style="float:right"><a href="{% url 'admin:database_feature_type_changelist' %}"><i class="fa fa-pencil-square-o fa-2x"></i></a></div>
+    {%endif%}
+    <h1>List of Domains in collagens</h1>
+    <h2></h2>
+</div>
+
+
+<div class="content">
+
+
+        <!-- Help begin -->
+        <div class="pure-g" style="padding:0px">
+                <div class="pure-u" style='margin-left:auto; margin-right:0;' >
+                    <a class="popHelp_open" href="#"><i class="far fa-question-circle fa-2x" style="color:#646464"></i></a>
+                    <div data-role="popup" class="ui-content" id="popHelp">
+                        <div style='float:right;text-align:right;position:relative;top:-0.7em'> <a href="#" data-rel="back" class="popHelp_close">[close]</a></div>
+                        <h3><i class="far fa-question-circle fa-1x" style="color:#646464"></i> Help & Info</h3>
+                        <ul>
+                                <li>Expand the clusters by clicking on the little arrowheads.</li>
+                                <li>Double-click on any entry to open a corresponding overview page.</li>
+                                <li>Numbers indicate the members in each cluster.</li>
+                        </ul>
+                        <!-- Add an optional button to close the popup -->
+                    </div>
+                </div>
+            </div>
+            <!-- Help end -->
+
+
+
+
+    <div id="clade" class="pure-g" style="padding:10px">
+        <div class="pure-u" style='column-count:1'>
+            <h2 style="padding:10px">Domains / Features</h2>
+            <P>Please be patient, this site needs a few seconds to load completely.</p>
+
+            {% if domains %}
+            <div id="tree">
+                <ul>
+                    {% for domain in domains %}
+                    <li class="folder"><a href="{% url 'domain_info' domain.name %}">{{ domain.name }}
+                            ({{domain.get_unique.count}})
+                        </a>
+                        <ul>
+                            {% if domain.domain_set %}
+                            {% for domain2 in domain.domain_set.all|order_by:'name' %}
+                            <li class="folder"><a href="{% url 'domain_info' domain2.name %}">{{ domain2.name }}
+                                    ({{par_clade2.gene_all_count}}) </a>
+                                {% if domain2.domain_set %}
+                                <ul>
+                                    {% for domain3 in domain2.domain_set.all|order_by:'name' %}
+                                    <li class="folder"><a href="{% url 'domain_info' domain3.name%}">{{ domain3.name }}
+                                            ({{par_clade3.gene_all_count}}) </a>
+                                        <ul>
+                                            {% if domain3.domain_set %}
+                                            {% for domain4 in domain3.domain_set.all|order_by:'name' %}
+                                            <li class="folder"><a href="{% url 'domain_info' domain4.name %}">{{ domain4.name
+                                                    }}
+                                                    ({{par_clade4.gene_all_count}}) </a>
+                                                {% for gene in domain4.get_unique %}
+                                            <li><a href="{% url 'gene_info'  gene.name %}/">{{ gene.name }}</a>
+                                                {% endfor %}
+                                                {% endfor %}
+                                                {% endif %}
+
+                                                {% for gene in domain3.get_unique %}
+                                            <li><a href="{% url 'gene_info' gene.name %}">{{ gene.name }}</a>
+                                                {% endfor %}
+                                        </ul>
+                                        {% endfor %}
+                                        {% endif %}
+                                        {% for gene in domain2.get_unique %}
+                                    <li><a href="{% url 'gene_info' gene.name %}">{{ gene.name }}</a>
+                                        {% endfor %}
+                                </ul>
+
+                                {% endfor %}
+                                {% endif %}
+                                {% for gene in domain.get_unique %}
+                            <li><a href="{% url 'gene_info' gene.name %}">{{ gene.name }}</a>
+                                {% endfor %}
+                        </ul>
+                        {% endfor %}
+
+                </ul>
+            </div>
+
+            <br>
+            <a class="pure-button" href="#" onClick='$("#tree").fancytree("getTree").visit(function(node){ node.setExpanded(); });'><i
+                    class="far fa-plus-square"></i> Expand all</a>
+            <a class="pure-button" href="#" onClick=' $("#tree").fancytree("getTree").visit(function(node){ node.setExpanded(false); });'><i
+                    class="far fa-minus-square"></i> Collapse all</a>
+
+
+            {% else %}
+            <p>No genes in the database !?!</p>
+            {% endif %}
+
+        </div>
+    </div>
+
+
+
+    {% if user.is_authenticated %}
+    <div style="float:right"><a href="{% url 'admin:database_clade_changelist' %}"><i class="fa fa-pencil-square-o fa-2x"></i></a></div>
+    {%endif%}
+</div>
+
+
+{% endblock %}

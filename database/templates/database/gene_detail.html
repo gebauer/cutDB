@@ -1,0 +1,336 @@
+
+{% extends "database/base.html" %}
+{% load static %}
+{% block extraheader %}
+{% load mathfilters %}
+{% load genefilters %}
+
+<script>
+    add_clade_to_gene_url = "{% url 'add_clade_to_gene' %}";
+
+</script>
+<script src="{% static 'database/js/d3.v3.min.js' %}" charset="utf-8"></script>
+<script src="{% static 'database/js/sequence-viewer.js' %}"></script>
+<script src="{% static 'database/js/feature-viewer.min.js' %}"></script>
+<script src="{% static 'database/js/database-main.js' %}"></script>
+<script src="{% static 'database/js/popper.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'database/bootstrap/bootstrap.min.css' %}" >
+<script src="{% static 'database/bootstrap/bootstrap.min.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'database/css/feature-viewer.min.css' %}">
+
+
+
+{% endblock %}
+
+{% block content %}
+    <div class="header">
+        {% if user.is_authenticated %}
+        <div style="float:right"><a href="{% url 'admin:database_gene_change' gene.id %}"><i class="fa fa-pencil-square-o fa-2x"></i></a></div>
+        {%endif%}
+        <h1>{{ gene.name }}</h1>        
+        <h2>Wormbase {{ gene.wormbase_id }}</h2>
+    </div>
+
+    <div class="content">
+        
+
+
+        <div class="pure-u-1-8" style="float:right;font-weight:bold">
+            <div class="pure-menu pure-menu-horizontal">
+                <ul class="pure-menu-list">
+                    <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover"><a href="#" class="pure-menu-link">Export <i class="far fa-question-circle fa-xs" style="color:#646464" title="You can export the amino acids sequence with all feautures (or none) as GenBank (or FASTA)."></i></a>
+                        <ul class="pure-menu-children">
+                            <li class="pure-menu-item"><a href="#" onClick="exportGene('genbank');" class="pure-menu-link">... as Genbank</a></li>
+                            <li class="pure-menu-item"><a href="#" onClick="exportGene('fasta');"  class="pure-menu-link">... as FASTA</a></li>
+                        </ul>
+                    </li>
+            </div>
+        </div>
+
+        <h2 class="content-subhead">Basic parameters <i class="far fa-question-circle fa-xs" style="color:#646464" title="Link out to other databases."></i></h2>
+          
+        <div class="pure-g">
+            <div class="pure-u-5-5">
+                <table class="pure-table-striped">
+                <tr>
+                    <td>Entrez-ID</td>
+                    <td> {% if gene.gene_id %}<a target='_blank' href="https://www.ncbi.nlm.nih.gov/gene/?term={{ gene.gene_id }}"><i class="fas fa-external-link-alt"></i></a>{% endif %}
+                        {{ gene.gene_id }}</td>
+                </tr><tr>
+                    <td>Wormbase-ID</td>
+                    <td>{% if gene.wormbase_id %}<a target='_blank' href="http://parasite.wormbase.org/Caenorhabditis_elegans_prjna13758/Gene/Summary?g={{ gene.wormbase_id }}"><i class="fas fa-external-link-alt"></i></a>{% endif %}
+                        {{ gene.wormbase_id }}</td>
+                </tr><tr>
+                    <td>Uniprot-ID</td>
+                    <td>{% if gene.prot_id %}<a target='_blank' href="http://www.uniprot.org/uniprot/{{ gene.prot_id }}"><i class="fas fa-external-link-alt"></i></a>{% endif %}
+                        {{ gene.prot_id }}</td>
+                </tr><tr>
+                    <td>Transcripts on wormbase</td>
+                    <td><a target='_blank' href="{{ transcript_url | safe}}"><i class="fas fa-external-link-alt"></i></a>
+                        {{ transcript | safe}}</td>
+                </tr>
+                </table>
+            </div>
+        </div>
+              
+        <h2 class="content-subhead">Description <i class="far fa-question-circle fa-xs" style="color:#646464" title="Shows special remarks about the gene (if present)"></i></h2>
+        <div id="description">{{gene.description|safe}}</div>
+
+        <h2 class="content-subhead">Cluster <i class="far fa-question-circle fa-xs" style="color:#646464" title="Shows the classification and other members in the same class/cluster"></i></h2>
+        <div id="clade" class="pure-g">
+            <div class="pure-u-3-4">
+
+                <ul>
+                    {% for clade in gene.clade.all %}
+                    <li><a href="{% url 'clades' %}{{ clade.identifier }}/">{{clade.identifier}}</a></li>
+                    <ul compact="compact">
+                        {% for gene2 in clade.gene_set.all %}
+                        <li><a href="{% url 'genes' %}{{ gene2.name }}/">{{ gene2.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+
+                    {% endfor %}
+                </ul>
+            </div>
+            {% if user.is_authenticated %}
+            <div class="pure-u-1-4">
+                <div id='clade_regexpr'>
+                    <button onClick='(function(){
+                      console.log("Identify clades!");
+                      identifyClade();
+                   })(event)'>Identify Cluster</button>
+                </div>
+                <div id='id-clade' style='display: none '>
+                    No cluster found.
+                </div>
+
+            </div>
+            {% endif %}
+        </div>
+
+        <h2 class="content-subhead">Schematic domain overview <i class="far fa-question-circle fa-xs" style="color:#646464" title="A simpliefed schematic overview of the domain organisation, downloadable as SVG."></i></h2>
+        <a href="#" id="downloadLink"><i class="fa fa-download" aria-hidden="true"></i></a>
+        <div id="clade" >
+            <span id='OverviewSVG' >
+            {% with scale="0.5" height="5" left_border="20"%}
+            <svg width="210mm" height="{{height}}mm" viewboxport="0 0 210 {{height}}">
+                    <line x1="{{0|mul:scale|addition:left_border}}mm" y1="{{height|div:2}}mm" x2="{{gene.sequence|length|mul:scale|addition:left_border}}mm" y2="{{height|div:2}}mm" stroke="black" stroke-width="1"/>
+
+                {% for feature in gene.feature_set.all %}
+                    {% for start, end in feature.region_to_array %}
+                    {% if feature.type.name|in_list:'predictedFurin,ph_SigPep,ph_Transmem,C-Cys-ProPep,SignalP,N-Cys-ProPep,col1_domain,N-Propeptide,N-Cys-Collagen,C-Cys-Collagen,N-Cys-ProPep' %}
+                    <rect x="{{start|sub:1|mul:scale|addition:left_border}}mm" y="{{height|div:2|sub:2}}mm" 
+                    {% if feature.type.name|in_list:'C-Cys-ProPep,N-Cys-ProPep,N-Cys-Collagen,C-Cys-Collagen' %}
+                      rx="2" ry="2"
+                    {%endif%}
+                    width="{{end|sub:start|addition:1|mul:scale}}mm" height="4mm" fill="{{feature.type.color}}" />
+                    {% if feature.type.name|in_list:'col1_domain,N-Propeptide' %}
+                      <text font-size="10pt" font-family="Arial, Sans-Serif" fill="white" x="{{end|sub:start|sub:1|div:2|addition:start|mul:scale|addition:left_border}}mm" y="{{height|div:2|addition:1.2}}mm"  text-anchor="middle">{{end|sub:start|addition:1|intdiv:3}}</text>  
+                    {%endif%}
+                        {% endif %}
+                    {%endfor%}
+                    <text font-size="10pt" font-family="Arial, Sans-Serif" fill="black" x="0mm" y="{{height|div:2|addition:1.2}}mm" text-anchor="left">{{gene.name}}</text>  
+
+      
+
+                {% endfor %}
+            {% endwith %}
+    
+            </svg>
+            </span>
+        </div>
+
+        <h2 class="content-subhead">Sequence <i class="far fa-question-circle fa-xs" style="color:#646464" title="Sequence view with certain domains highlighted. Color code is the same as below."></i></h2>
+        <div id="clade">
+                Be carefully if two feautures are overlaying (e.g. collagen domain and C-terminal Cysknot), the sequence is doubled at that position (you note this by the shigt in the gaps). This is bug and will (eventually) be resolved!
+            <div id="sequence-viewer"></div>
+        </div>
+
+        <h2 class="content-subhead">Feature Viewer <i class="far fa-question-circle fa-xs" style="color:#646464" title="Shows ALL feauture recognised for this protein."></i></h2>
+        <div id="clade">
+             
+            <div id="feature-viewer"></div>
+            {% if user.is_authenticated %}
+            <div style="float:right" id='editFeature'><a href="#" target='changeDatabae' id="editFeatureLink">edit feature <i class="fa fa-edit" aria-hidden="true"></i></a>
+            </div>
+            {%endif%}
+        </div>
+
+
+        <br><br>
+        {% if user.is_authenticated %}
+        <div style="float:right"><a href="{% url 'admin:database_gene_change' gene.id %}"><i class="fa fa-pencil-square-o fa-2x"></i></a></div>
+        {%endif%}       
+    </div>
+
+  
+{% endblock  %}
+
+
+
+{% block individual_scripts %}
+<script>
+function identifyClade() {
+    console.log ("Got it! Analysing {{gene.name}}");
+    $.ajax({   
+        url : "{% url 'test_gene' gene.name %}", // the endpoint
+        type : "POST", // http method
+        data : { gene_name : "{{gene.name}}"},
+        success : function(json) {
+            html_list = ""
+            sequence = "{{ gene.sequence }}";
+            temp1 = [];
+            //console.log ('#',Object.keys(json['matches']).length);
+            //console.log ('-',json['matches']);
+            for (key in json['matches']) {
+                console.log('key',key);
+                //console.log('',json['matches'][key]);
+                for (var key2 in json['matches'][key]) {
+                    console.log('mathces',json['matches'][key].length)
+                    //console.log('match',json['matches'][key][key2])
+                    match = json['matches'][key][key2];
+                    html_list += "<li><a href='{% url 'clades' %}"+key+"'>"+key+"</a> - hits: "+json['matches'][key].length
+                   
+                    html_list +=" <i class='fa fa-plus-circle' aria-hidden='true' onmouseover='seq.selection("+match['start']+", "+match['end']+", \"red\")' onclick='addClade(\""+json['gene_name']+"\", \""+key+"\","+JSON.stringify(json['matches'][key])+")'></i>";
+                    }
+                
+            } 
+
+            if (Object.keys(json['matches']).length == 0) {
+                html_list="<p>No hits found!</p>";
+            }
+            $("#id-clade").html(html_list);
+            $("#id-clade").show();
+            
+        },
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+               console.log("failed");
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+
+        // handle a successful response
+    });
+    
+    
+}
+
+function exportGene($format) {
+    console.log ("Got it! Analysing, exporting  {{gene.name}} as $format");
+    
+    var link=document.createElement('a');
+    link.href = "{% url 'gene_info' gene.name  %}export/"+$format+"/";
+    link.download = link.href.substr(link.href.lastIndexOf('/') + 1);
+    link.click();
+    
+}
+
+
+
+
+function main (){
+
+  $.ajaxSetup({data: {
+    csrfmiddlewaretoken: '{{ csrf_token }}'
+  }});
+
+  seq = new Sequence('{{gene.sequence}}'); // Globale Variable!
+
+  var ft = new FeatureViewer('{{gene.sequence}}', '#feature-viewer', {
+    showAxis: true, 
+    showSequence: true, 
+    brushActive: true,     //zoom                                
+    toolbar:true,     //current zoom & mouse position                                
+    bubbleHelp:true,                                 
+    zoomMax:9 //define the maximum range of the zoom      
+  });
+  
+  var features = new Array();
+  var change_urls = new Object();
+                         
+    {% for feature in gene.feature_set.all %}
+
+        ft.addFeature({ 
+            data: [{{feature.xy_set}}], 
+            name: "{{feature.name}}", 
+            className: "{{feature.name|slugify}}", //can be used for styling        
+            color: "#0F8292",  
+            color: "{{feature.type.color}}",
+            type: "rect" // ['rect', 'path', 'line']    
+        });
+
+        {% if user.is_authenticated %}
+            change_urls['{{feature.id}}'] = '{% url 'admin:database_feature_change' feature.id %}'
+        {% endif %}
+  
+  {% if feature.type.name|in_list:'ph_Signal Peptide,ph_Transmembrane Helix,C-Cys-ProPep,N-Cys-ProPep,col1_domain,N-Propeptide,N-Cys-Collagen,C-Cys-Collagen,N-Cys-ProPep' %}
+      
+      features.push ({start: {{feature.start|sub:1}}, end:  {{feature.end}}, color: "white", underscore: false, bgcolor: "{{feature.type.color}}",  tooltip: "{{feature.name}}"})
+  {% endif %}
+  {% endfor %}
+
+  ft.onFeatureSelected(function (d) {
+    if (features.length != 0) { 
+        seq.coverage(features, d.detail['start']-1,  d.detail['end']-1, '#FFC300')
+        $('#editFeatureLink').attr("href", change_urls[d.detail['id']]);
+
+    } else {
+        seq.selection (d.detail['start']-1,  d.detail['end']-1, '#FFC300')
+        $('#editFeatureLink').attr("href", change_urls[d.detail['id']]);
+    }
+    
+  });
+
+
+
+    seq.render('#sequence-viewer',{
+      'showLineNumbers': true,
+      'wrapAminoAcids': true,
+      'charsPerLine': 50,
+      'toolbar': true,
+      'search': true,
+      'title' : "{{gene.name}}",
+      'sequenceMaxHeight': "300px",
+      'badge': true
+     
+    });
+    
+    if (features.length != 0) { 
+        seq.coverage(features);
+    }
+
+    $('#downloadLink').click(function(){
+        downloadInnerHtml(fileName, 'OverviewSVG','text/html');
+    });
+
+
+
+
+
+}
+
+
+
+        function downloadInnerHtml(filename, elId, mimeType) {
+            var elHtml = document.getElementById(elId).innerHTML;
+            var link = document.createElement('a');
+            mimeType = mimeType || 'image/svg+xml';
+        
+            link.setAttribute('download', filename);
+            link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(elHtml));
+            link.click(); 
+        }
+        
+        var fileName =  '{{gene.name}}.svg'; // You can use the .txt extension if you want
+        
+     
+
+
+$( document ).ready(function() {main()});
+
+
+</script>
+
+{% endblock %}

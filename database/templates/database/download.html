@@ -1,0 +1,35 @@
+{% extends "database/base.html" %}
+{% load static %}
+{% block extraheader %}
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>CeColDB - Download & Export</h1>
+</div>
+<div class="content">
+    <div class="pure-g">
+        <div class="pure-u">
+            <h2 class="content-subhead">Export & Download</h2>
+            <p>You can download most information on the respective pages directly:
+                <ul>
+                    <li>You can download the cuticular collagens, directly from the webpages reacahble under "genes"</li>
+                    <li>You can download the sequences of all collagens of a particular class using the "export" function on the respective pages for the clusters/classes. (TIP: If you want to download all cuticular collagens, use the export function on <a href="{% url 'clade_info' 'cuticular_collagens' %}?recursive=True">this page</A> )</li>
+                    <li>On the pages describing individual cluster/classes you'll find a table which easily exports to Excel, with many interesting paramters.</li>
+                    <li>If you need anything else just <a href="{% url 'contact' %}">contact</A> us!</li>
+                </ul>
+            </p>
+            <h2 class="content-subhead">Publications</h2>
+            <p>We are currently in the process of publishing our findings on collagens and the matrisome in general - stay tuned!</p>
+        </div>
+    </div>
+</div>
+
+
+    {% endblock %}
+
+
+
+    {% block individual_scripts %}
+
+    {% endblock %}

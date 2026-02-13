@@ -1,0 +1,282 @@
+*{
+	margin:0;
+}
+
+html, body {
+	height:100%;
+
+}
+
+#layout {
+		min-height:100%;
+		margin-bottom: 100px;
+}
+
+#layout:after {
+	content: "";
+	display:block;
+}
+
+#footer, #page:after {
+	height:100px;
+	background: #191818;
+	color: #999;
+	font-size: 0.8em;
+	text-align: center;
+	vertical-align: middle;
+	padding-top: 20px;
+}
+.clade_list_compact {
+ line-height: 100%;
+
+}
+
+.database_images {
+ height : 15px;
+ cursor : pointer;
+ }
+
+h3.content-subhead{
+    margin: 0px 0px 0px 0px;
+    font-size:20px;
+
+}
+
+table.identity-table {
+	font-family: verdana,arial,sans-serif;
+	font-size:11px;
+	color:#333333;
+	border-width: 1px;
+	border-color: #666666;
+	border-collapse: collapse;
+}
+table.identity-table th {
+	border-width: 1px;
+	padding: 8px;
+	border-style: solid;
+	border-color: #666666;
+	background-color: #dedede;
+}
+table.identity-table td {
+	border-width: 1px;
+	padding: 8px;
+	border-style: solid;
+	border-color: #666666;
+}
+
+
+td.style100 {
+    background-color: #00ff00;
+}
+
+.style90 {
+    background-color: #aaff00;
+}
+
+.style80 {
+    background-color: #ffff00;
+}
+
+.style70 {
+    background-color: #ffd500;
+}
+
+.style60 {
+    background-color: #ffaa00;
+   
+}
+
+.style50 {
+    background-color: #ff8000;
+}
+
+.style40 {
+    background-color: #ff5500;
+}
+
+.style30 {
+    background-color: #ff2b00;
+}
+
+.style20 {
+    background-color: #ff0000;
+}
+.style10 {
+    background-color: #ff0000;
+}
+
+.sequence_field {
+	font-family: fixedsys, consolas, monospace;
+	font-weight: bold;
+}
+
+.mark_char_C{
+	font-weight: bold;
+	background-color: #FF0000;
+}
+
+.mark_char_G{
+	font-weight: bold;
+	background-color: #00FF00;
+}
+
+.pure-menu-heading {
+    text-transform: none;
+	color: #c50000;
+	font-size:2em;
+}
+
+#menu .pure-menu-heading {
+	font-size:1.5em;
+}
+
+
+
+.header {
+	background: #1f8dd6;
+	color: #ffffff;
+    margin: 0;
+    color: #333;
+    text-align: center;
+    padding: 0 0 0 0;
+	border-bottom: 1px solid #eee;
+	font-weight: 300;
+	padding: 0.6em 0px 0.6em 0.6em;
+	margin-bottom:4em;
+}
+
+.header h1 {
+	margin: 0;
+	color: #ffffff;
+	font-weight: 300;
+	font-size: 1.5em;
+}
+
+
+
+h2.content-subhead {
+    font-size: 1.3em;
+    font-weight: 500;
+}
+
+
+.pure-table-striped td {
+	padding-left: 15px;
+	padding-right: 5px;
+}
+
+
+/* Definition Lists */
+
+dt {
+	font-weight: bold;
+}
+dd {
+	background:none no-repeat left top;
+	padding-left: 50px;
+}
+dd.catchPhrase1 {
+	background-image:url('../img/paper_small.gif');
+}
+dd.catchPhrase2 {
+	background-image:url('../img/stats.gif');
+}
+
+
+/*   collapsible content  ###*/
+
+input[type='checkbox'] {
+	display: none;
+  }
+
+  .lbl-toggle {
+	display: block;
+  
+	font-weight: bold;
+	font-family: monospace;
+	font-size: 1.0rem;
+	text-transform: uppercase;
+	text-align: center;
+  
+	padding: 0.5rem;
+  
+	color: rgb(233, 233, 233);
+	background: #f59696;
+  
+	cursor: pointer;
+  
+	border-radius: 7px;
+	transition: all 0.25s ease-out;
+  }
+  
+  .lbl-toggle:hover {
+	color: white;
+  }
+
+
+  .lbl-toggle::before {
+	content: ' ';
+	display: inline-block;
+  
+	border-top: 5px solid transparent;
+	border-bottom: 5px solid transparent;
+	border-left: 5px solid currentColor;
+  
+	vertical-align: middle;
+	margin-right: .7rem;
+	transform: translateY(-2px);
+  
+	transition: transform .2s ease-out;
+  }
+
+  .collapsible-content .content-inner {
+	background: #f7c3c3;
+	border-bottom: 1px solid #f59696;
+  
+	border-bottom-left-radius: 7px;
+	border-bottom-right-radius: 7px;
+	padding: .5rem 1rem;
+  }
+
+  .collapsible-content {
+	max-height: 0px;
+	overflow: hidden;
+  
+	transition: max-height .25s ease-in-out;
+  }
+
+  .toggle:checked + .lbl-toggle + .collapsible-content {
+	max-height: 350px;
+  }
+
+  .toggle:checked + .lbl-toggle::before {
+	transform: rotate(90deg) translateX(-3px);
+  }
+  
+  .toggle:checked + .lbl-toggle {
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0;
+  }
+
+  /* PopUp */
+ /* Popup container - can be anything you want */
+
+
+  #popHelp {
+	background-color: white;
+	border-radius: 10px;
+	border: solid 2px #999999;
+	padding: 10px;
+
+}
+.
+/* Add animation (fade in the popup) */
+@-webkit-keyframes fadeIn {
+    from {opacity: 0;} 
+    to {opacity: 1;}
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity:1 ;}
+}

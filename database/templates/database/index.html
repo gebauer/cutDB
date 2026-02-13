@@ -1,0 +1,52 @@
+
+{% extends "database/base.html" %}
+{% load static %}
+{% block extraheader %}
+<script>
+    add_clade_to_gene_url = "{% url 'add_clade_to_gene' %}";
+</script>
+
+{% endblock %}
+
+{% block individual_scripts %}
+
+{% endblock %}
+
+{% block content %}
+    <div class="header" >
+        <h1>CeColDB - a database for cuticular collagens in <i>C. elegans</i></h1>     
+    </div>
+
+    <div class="content">
+        <div class="pure-g">
+            <div class="pure-u-5-6">
+                <h3>Welcome to the CeColDB - the database for collagens in C. elegans.</h3>
+                
+                <p style="padding-bottom:20px;padding-top:20px">The CeColDB helps you to browse the interesting collagens existing in C. elegans.</p>
+                <p style="padding-bottom:20px">We are currently preparing an accompanying manuscript, which we will announce here, as soon as it is published.</p>
+                <p style="padding-top:60px;padding-bottom:20px">Also visit our sister projects:
+                <table>
+                    <tr>
+                        <td><a href="http://matrisomeproject.mit.edu/other-resources/c-elegans-matrisome/"><img src="{% static 'database/images/CeMatrisome.png' %}" height='60px'></a></td>
+                        <td Valign='top'>The <i>C. elegans matrisome</i> project.</td>
+                    </tr>
+                    <tr>
+                        <td><a href="http://ce-matrisome-annotator.permalink.cc"><img src="{% static 'database/images/CeMatrisomeAnnotator.png' %}" height='60px'></a></td>
+                        <td  Valign='top'>The <i>C. elegans</i> matrisome Annotator.</td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="pure-u-1-6">
+                <img src="{% static 'database/images/CeCollagenDB.png' %}" height='60px' style="float:right">
+            </div>
+        </div>
+    </div>
+        
+                            
+
+  
+{% endblock  %}
+
+
+

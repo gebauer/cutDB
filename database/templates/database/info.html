@@ -1,0 +1,83 @@
+
+{% extends "database/base.html" %}
+{% load static %}
+{% block extraheader %}
+
+
+{% endblock %}
+
+{% block content %}
+    <div class="header" >
+        <h1>CeColDB - Help & Information</h1>     
+    </div>
+
+    <div class="content">
+        
+        <div class="pure-g">
+            <div class="pure-u">
+               <h2 class="content-subhead">The website</h2> 
+               <DL>
+                <DT>Genes</DT><DD>The &lt;<a href="{% url 'genes' %}">genes</a>&gt;-page gives you access to a gene/protein centered view on the collagen-like proteins in C. elegans. You can browse through all proteins we have included (which are all collagens and proteins which might <a href="{% url 'clade_info' 'no_collagen' %}">erroneously be considered as collagens</a>)</DD>
+                <DT>Clusters</DT><DD>The &lt;<a href="{% url 'clades' %}">clusters</a>&gt;-page display our current classification of collagen in C. elegans. Version 1.0 was made available together with our publication of the C. elegans matrisome. You can easily explore the various clusters defined by the different  structure of the collagen domains.</DD>
+                <DT>Domains</DT><DD>Various domains beside collagen domains can be identified in the collagen-like proteins of C. elegans. Some features are hand-curated, other are derived automatically from the pfam website. We regularly  update our pfam-prediction, however, there might be still newer information available at <a href='pfam.xfam.org'>pfam.xfam.org</a></DD>
+                <DT>Export/Download</DT><DD>All our data are free to download. Here we offer various ways, to download out information. If you need it in a further format or if you need any other help in accessing and using our data, we are happy to help - please <a href="{% url 'contact' %}">contact</a> us!</DD>
+               </DL>
+            
+               <h2 class="content-subhead">Citing / Using the data</h2> 
+               <DL>
+                   <DT>Citation</DT>
+                   <DD>If you use our data, it would be great if you cite our paper and link to this page. The official link is <a href='//CeColDB.permalink.cc'>CeColDB.permalink.cc</a>.</DD>
+                   <DT>Using the Data</DT>
+                   <DD>Use our data, however, it suits you. We would be grateful if you cite it, whenever it is possible</DD>
+               </DL>
+
+               <h2 class="content-subhead">Related projects</h2> 
+               <DL>
+                   <DT>C. elegans matrisome</DT>
+                   <DD><a href="http://matrisomeproject.mit.edu/other-resources/c-elegans-matrisome/" target='_blank'><img src="{% static 'database/images/CeMatrisome.png' %}" height='60px' style="float:left"></a>We created this page during the C. elegans matrisome project, which is hosted <a href="http://matrisomeproject.mit.edu/other-resources/c-elegans-matrisome/" target='_blank'>here</A>.</DD>
+                   <DT>C. elegans matrisome annotator</DT>
+                   <DD><a href="http://ce-matrisome-annotator.permalink.cc"><img src="{% static 'database/images/CeMatrisomeAnnotator.png' %}" height='60px' style="float:left"></a>To identify matrisomal genes in your dataset you can use our brilliantly progammed C. elegans Matrisome Annotator <a href="http://ce-matrisome-annotator.permalink.cc">here</A>.</DD>
+                   </DL>
+
+
+               <h2 class="content-subhead">Resources, we used building this website</h2> 
+               <DL>
+                   <DT>PermaLink.cc</DT>
+                   <DD>We thank <a href='//permalink.cc'>permalink.cc</a> for making a permanent URL for us available (Frankly, we also maintain permalink.cc - so this is a really shameless pluck <i class="far fa-smile-wink"></i>). You can get your own permanent URL for ANY scientific resources at <a href='//permalink.cc'>permalink.cc</a>.
+                    <DT>Open source packages</DT>
+                    <DD>We use several free and open source packages by various developers. We are really grateful for all their work and are happy to reference their projects here, in no particular order:
+                        <UL>
+                            <LI><a href="https://purecss.io">PureCSS</a></LI>
+                            <LI><a href="https://www.ebi.ac.uk/Tools/msa/clustalo/">ClustalO</a></LI>
+                            <LI><a href="https://github.com/calipho-sib/feature-viewer">neXtProt - Feature Viewer</a></LI>
+                            <LI><a href="https://github.com/calipho-sib/sequence-viewer">neXtProt - Sequence Viewer</a></LI>
+                            <LI><a href="https://fontawesome.com/free">Font Awesome</a></LI>
+                            
+                            <LI><a href="https://jquery.com">JQuery</a></LI>
+                            <LI><a href="https://github.com/mar10/fancytree">JQuery FancyTree</a></LI>
+                            <LI><a href="https://datatables.net">JQuery DataTables</a></LI>
+                       
+                            <LI><a href="https://getbootstrap.com">Bootstrap (yes, we use two frameworks and are aware it is probably not the best idea...)</a></LI>
+                            <LI><a href="http://bootstrap-table.wenzhixin.net.cn">Bootstrap Table</a></LI>
+                        </UL>
+                    </DD>
+                </DL>
+
+            
+            
+            
+            </div>
+        </div>
+
+    </div>
+        
+                            
+
+  
+{% endblock  %}
+
+
+
+{% block individual_scripts %}
+
+{% endblock %}
