@@ -16,7 +16,7 @@ RUN apt-get update \
 RUN pip install --no-cache-dir poetry
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev --no-interaction --no-root
+    && poetry install --only main --no-interaction --no-root
 
 # Clustal Omega binary (override with env in Coolify if needed)
 ENV CLUSTALO_BIN=/usr/bin/clustalo
